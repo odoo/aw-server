@@ -132,7 +132,7 @@ if __name__ == "__main__":
     else:
         workdir = projectpath
 
-    assign_static_version()
+    #assign_static_version()
 
     print("By method:")
     print(f"  git: {detect_version_git()}")
