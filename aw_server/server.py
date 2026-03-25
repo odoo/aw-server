@@ -51,14 +51,15 @@ class AWFlask(Flask):
             static_url_path=static_url_path,
         )
         self.config["HOST"] = host  # needed for host-header check
-        with self.app_context():
-            _config_cors(cors_origins, testing)
 
         # Initialize datastore and API
         if storage_method is None:
             storage_method = aw_datastore.get_storage_methods()["memory"]
         db = Datastore(storage_method, testing=testing)
         self.api = ServerAPI(db=db, testing=testing)
+
+        with self.app_context():
+            _config_cors(cors_origins, testing)
 
         self.register_blueprint(root)
         self.register_blueprint(rest.blueprint)
@@ -108,6 +109,9 @@ def _config_cors(cors_origins: List[str], testing: bool):
     # TODO: This could probably be more specific
     #       See https://github.com/ActivityWatch/aw-server/pull/43#issuecomment-386888769
     cors_origins.append("moz-extension://*")
+    # retrieve in the settings the cors_origin set in the webui and merge them with the cli setting
+    settings = current_app.api.settings
+    cors_origins.extend(settings.get('cors_origins', '').split(','))
 
     # See: https://flask-cors.readthedocs.org/en/latest/
     CORS(current_app, resources={r"/api/*": {"origins": cors_origins}})
